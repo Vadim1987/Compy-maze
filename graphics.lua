@@ -6,6 +6,26 @@ gfx = love.graphics
 
 require("decorations")
 
+-- The in-game HUD inherits the Compy runtime font: a
+-- monospace Nerd font carrying icon + CJK fallbacks,
+-- sized to the screen. The legend's compass and rotation
+-- glyphs live in those fallbacks, so the HUD must NOT
+-- install its own font. Only the start menu picks a
+-- proportional UI font, cached by size below.
+
+FONT_UI = "assets/fonts/SarasaGothicJ-Bold.ttf"
+FONT_CACHE = { }
+
+function getFont(path, px)
+  local key = px .. ":" .. path
+  local f = FONT_CACHE[key]
+  if not f then
+    f = gfx.newFont(path, px)
+    FONT_CACHE[key] = f
+  end
+  return f
+end
+
 function draw_walls()
   if cur_background then
     cur_background()
@@ -251,7 +271,7 @@ end
 
 function draw_legend()
   if not cur_legend then
-    return 
+    return
   end
   local w, h = gfx.getDimensions()
   local font = gfx.getFont()
@@ -394,7 +414,25 @@ function draw_boxes()
 end
 
 -- Command echo: show entered lines on editor levels,
--- highlight the symbol currently being executed.
+-- highlight the symbol currently being executed, and
+-- keep the crashed token red until the next run.
+
+function echo_crashed(line_idx, col)
+  local c = GS.crash
+  if not c or c.line ~= line_idx then
+    return false
+  end
+  return c.col_from <= col and col <= c.col_to
+end
+
+function set_echo_color(line_idx, col, lit)
+  if echo_crashed(line_idx, col) then
+    gfx.setColor(Color[Color.red + Color.bright])
+    return
+  end
+  local alpha = lit and 1 or ECHO_DIM_ALPHA
+  gfx.setColor(1, 1, 1, alpha)
+end
 
 function draw_echo_line(line, line_idx, y)
   local font = gfx.getFont()
@@ -404,8 +442,7 @@ function draw_echo_line(line, line_idx, y)
   for col = 1, #line do
     local ch = line:sub(col, col)
     local lit = on and a.col_from <= col and col <= a.col_to
-    local alpha = lit and 1 or ECHO_DIM_ALPHA
-    gfx.setColor(1, 1, 1, alpha)
+    set_echo_color(line_idx, col, lit)
     gfx.print(ch, x, y)
     x = x + font:getWidth(ch)
   end
@@ -453,6 +490,19 @@ function draw_player(scale)
   draw_player_at(x, y, current_angle(), scale)
 end
 
+-- Level indicator: muted "Maze N" in a top corner.
+-- Top-right keeps clear of the upper-left echo and the
+-- bottom-right legend.
+
+function draw_level_indicator()
+  local font = gfx.getFont()
+  local label = "Maze " .. level_index
+  local m = font:getHeight() / 2
+  local x = gfx.getWidth() - font:getWidth(label) - m
+  gfx.setColor(1, 1, 1, 0.5)
+  gfx.print(label, x, m)
+end
+
 -- Draw everything on screen
 
 function draw_scene()
@@ -466,6 +516,7 @@ function draw_scene()
   draw_player(GRID.scale)
   draw_echo()
   draw_legend()
+  draw_level_indicator()
   draw_macros_list()
   draw_macro_ui()
   draw_celebrate()

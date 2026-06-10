@@ -3,8 +3,8 @@
 -- Animation durations in seconds
 
 ANIM = {
-  move_time = 1,
-  turn_time = 1,
+  move_time = 0.45,
+  turn_time = 0.45,
   bump_frac = 0.5,
   fail_pause = 0.5,
   win_time = 0.5

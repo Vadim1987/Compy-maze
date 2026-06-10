@@ -10,6 +10,7 @@ require("player")
 require("keyboard_graphics")
 require("macro")
 require("script")
+require("menu")
 
 sfx = compy.audio
 
@@ -55,6 +56,21 @@ end
 -- Game State
 
 macros = { }
+
+-- Macros (editor X=... sequences and recorded keyboard
+-- macros) carry across levels through a per-level base.
+-- Each editor run rebuilds the table from that base, so a
+-- definition deleted from the program is dropped; only
+-- carried base bindings survive a restart.
+
+function clone_macros(src)
+  local t = { }
+  for k, v in pairs(src) do
+    t[k] = v
+  end
+  return t
+end
+
 level_index = 1
 maze = levels[level_index]
 cur_controls = editor
@@ -65,6 +81,7 @@ cur_background = nil
 
 GS = {
   init = false,
+  mode = "menu",
   grid = nil,
   goal_map = { },
   box_map = { },
@@ -72,7 +89,9 @@ GS = {
   box_goal_count = 0,
   filled_count = 0,
   won = false,
-  celebrating = false
+  celebrating = false,
+  running = false,
+  base_macros = { }
 }
 
 -- Parsing: read the maze strings to find the player
@@ -123,7 +142,6 @@ function parse_maze()
   GS.filled_count = 0
   GS.won = false
   GS.celebrating = false
-  echo_lines = { }
   for r, row in ipairs(maze) do
     for c = 1, #row do
       parse_cell(row:sub(c, c), c, r)
@@ -196,6 +214,7 @@ end
 function reset_level()
   init_grid(#maze, #(maze[1]))
   parse_maze()
+  GS.failed = nil
 end
 
 function apply_attrs()
@@ -215,12 +234,16 @@ end
 function start_level()
   apply_attrs()
   reset_level()
+  echo_lines = { }
+  GS.crash = nil
+  GS.program = nil
+  GS.running = false
+  macros = clone_macros(GS.base_macros)
   cur_controls()
 end
 
 function ensure_init()
   if not GS.init then
-    start_level()
     GS.init = true
   end
 end
@@ -324,6 +347,21 @@ function ANIM_FINISHERS.move(a)
   check_goal()
 end
 
+-- Remember the crashed token so the editor can keep
+-- it red until the next run. Keyboard moves (no source
+-- line) leave no marker.
+
+function record_crash(a)
+  if not a.line then
+    return
+  end
+  GS.crash = {
+    line = a.line,
+    col_from = a.col_from,
+    col_to = a.col_to
+  }
+end
+
 function ANIM_FINISHERS.bump(a)
   sfx.lose()
   start_anim("fail", ANIM.fail_pause)
@@ -331,6 +369,7 @@ function ANIM_FINISHERS.bump(a)
   player.anim.line = a.line
   player.anim.col_from = a.col_from
   player.anim.col_to = a.col_to
+  record_crash(a)
 end
 
 function ANIM_FINISHERS.push(a)
@@ -352,14 +391,17 @@ end
 function next_level()
   level_index = level_index + 1
   if #levels < level_index then
-    love.event.quit()
+    to_menu()
   else
+    GS.base_macros = clone_macros(macros)
     maze = levels[level_index]
     local saved_q = player.queue
     local saved_r = player.queue_refs
+    local saved_running = GS.running
     start_level()
     player.queue = saved_q
     player.queue_refs = saved_r
+    GS.running = saved_running
   end
 end
 
@@ -372,6 +414,7 @@ CMD_HANDLERS = {
 }
 
 function on_win()
+  GS.running = false
   cur_progression()
 end
 
@@ -383,10 +426,23 @@ function execute_next()
   end
 end
 
+-- An editor run that failed (crashed or missed the goal)
+-- pauses so the child can read the result and the hint,
+-- then restarts on Tab. Keys mode resets immediately.
+
+function enter_failed(kind)
+  player.queue = { }
+  player.queue_refs = { }
+  GS.running = false
+  GS.failed = kind
+end
+
 function on_fail()
   if GS.won then
     player.queue = { }
     next_level()
+  elseif cur_controls == editor then
+    enter_failed("crash")
   else
     reset_level()
   end
@@ -447,32 +503,68 @@ end
 
 -- Editor input processing
 
-function record_echo(lines)
-  for _, line in ipairs(lines) do
-    table.insert(echo_lines, line)
+-- The editor runs the whole program from the start each
+-- time. A run that ends without a win pauses with a hint
+-- and waits for Tab to reset the robot to its start; a
+-- win leaves the program on screen. The statusline
+-- carries the current hint.
+
+function input_prompt()
+  if GS.failed == "miss" then
+    return "Goal not reached - press Tab to reset position"
+  elseif GS.failed == "crash" then
+    return "Crashed - press Tab to reset position"
   end
+  return "Commands:"
 end
 
 function rearm_input()
-  if not player.anim and #(player.queue) == 0 then
-    input_text("Commands:", string.lines(""))
+  if player.anim or 0 < #player.queue then
+    return
   end
+  if GS.running then
+    finish_run()
+  else
+    input_text(input_prompt(), string.lines(GS.program or ""))
+  end
+end
+
+-- A run that ended without a win. A crash already
+-- played the lose sound; a plain miss gets a soft
+-- "not yet" cue before the robot returns to start.
+
+function finish_run()
+  GS.running = false
+  if GS.won or GS.celebrating or GS.crash then
+    return
+  end
+  sfx.toggle()
+  GS.failed = "miss"
 end
 
 function process_user_input()
   if GS.input:is_empty() then
     rearm_input()
-    return 
+    return
   end
-  local text = string.unlines(GS.input())
+  start_program(string.unlines(GS.input()))
+end
+
+function start_program(text)
+  GS.failed = nil
   local lines = string.lines(text)
-  local offset = #echo_lines
-  if process_input(lines, offset) then
-    record_echo(lines)
-  else
+  if not validate_input(lines) then
     sfx.wrong()
-    input_text("Commands:", string.lines(text))
+    input_text(input_prompt(), string.lines(text))
+    return
   end
+  GS.program = text
+  GS.crash = nil
+  reset_level()
+  macros = clone_macros(GS.base_macros)
+  echo_lines = lines
+  process_input(lines, 0)
+  GS.running = true
 end
 
 -- Main Loop
@@ -485,14 +577,24 @@ function poll_tab_progression()
   if edge and (GS.celebrating or GS.won) then
     next_level()
   elseif edge then
-    sfx.lose()
     reset_level()
   end
   tab_was_down = down
 end
 
+-- Return to the start menu, dropping game input.
+
+function to_menu()
+  GS.mode = "menu"
+  ctrl_update = nil
+  ctrl_pressed = nil
+end
+
 function love.update(dt)
   ensure_init()
+  if GS.mode ~= "game" then
+    return
+  end
   poll_tab_progression()
   if player.anim then
     advance_anim(dt)
@@ -508,16 +610,17 @@ function love.update(dt)
 end
 
 function love.draw()
-  if GS.init then
+  if not GS.init then
+    return
+  end
+  if GS.mode == "menu" then
+    menu_draw()
+  else
     draw_scene()
   end
 end
 
 SYSTEM_KEYS = { }
-
-function SYSTEM_KEYS.escape()
-  love.event.quit()
-end
 
 function SYSTEM_KEYS.menu()
   cur_grid = not cur_grid
@@ -531,10 +634,21 @@ function is_shift_down()
   return d("lshift") or d("rshift")
 end
 
-function love.keypressed(k)
-  if k == "escape" and not is_shift_down() then
-    return 
+-- Shift+Esc steps back one level: game -> menu, and
+-- menu -> quit to the console. On editor levels the
+-- text modal consumes keys, so this fires only on
+-- direct-control levels and the menu; Ctrl+Esc always
+-- exits via the host.
+
+function on_escape()
+  if GS.mode == "game" then
+    to_menu()
+  else
+    love.event.quit()
   end
+end
+
+function game_key(k)
   local fn = SYSTEM_KEYS[k]
   if fn then
     fn()
@@ -543,12 +657,26 @@ function love.keypressed(k)
   end
 end
 
+function love.keypressed(k)
+  if k == "escape" then
+    if is_shift_down() then
+      on_escape()
+    end
+    return
+  end
+  if GS.mode == "menu" then
+    menu_key(k)
+  else
+    game_key(k)
+  end
+end
+
 function love.keyreleased(k)
   release_shift(k)
 end
 
 function love.resize()
-  if GS.init then
+  if GS.init and GS.mode == "game" then
     init_grid(GRID.rows, GRID.cols)
   end
 end
