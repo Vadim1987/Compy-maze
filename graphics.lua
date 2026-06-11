@@ -414,19 +414,20 @@ function draw_boxes()
 end
 
 -- Command echo: show entered lines on editor levels,
--- highlight the symbol currently being executed, and
--- keep the crashed token red until the next run.
+-- highlight the symbol currently being executed, keep a
+-- crashed token red until the next run, and flag an
+-- invalid token red until the program is re-submitted.
 
-function echo_crashed(line_idx, col)
-  local c = GS.crash
-  if not c or c.line ~= line_idx then
+function echo_marked(mark, line_idx, col)
+  if not mark or mark.line ~= line_idx then
     return false
   end
-  return c.col_from <= col and col <= c.col_to
+  return mark.col_from <= col and col <= mark.col_to
 end
 
 function set_echo_color(line_idx, col, lit)
-  if echo_crashed(line_idx, col) then
+  if echo_marked(GS.crash, line_idx, col)
+       or echo_marked(GS.invalid, line_idx, col) then
     gfx.setColor(Color[Color.red + Color.bright])
     return
   end
@@ -459,30 +460,47 @@ function draw_echo()
   end
 end
 
--- Celebrate message
+-- Centered "<prefix> [Tab] <suffix>" banner, shared by the
+-- win and failed-run modals. draw_key restores the font.
 
-function celebrate_layout()
-  local font = gfx.getFont()
-  local pw = font:getWidth(CELEBRATE_PREFIX)
-  local sw = font:getWidth(CELEBRATE_SUFFIX)
-  return pw, sw, width.tab, height.tab
-end
-
-function draw_celebrate()
-  if not (GS.celebrating or GS.won) then
-    return 
-  end
+function draw_keycap_banner(prefix, suffix)
   local w, h = gfx.getDimensions()
   local font = gfx.getFont()
-  local pw, sw, kw, kh = celebrate_layout()
+  local pw = font:getWidth(prefix)
+  local sw = font:getWidth(suffix)
+  local kw, kh = width.tab, height.tab
   local x = (((w - pw) - kw) - sw) / 2
   local ky = (h - kh) / 2
   local ty = ky + (kh - font:getHeight()) / 2
-  gfx.setColor(Color[Color.white + Color.bright])
-  gfx.print(CELEBRATE_PREFIX, x, ty)
+  gfx.print(prefix, x, ty)
   draw_key(x + pw, ky, "tab")
   gfx.setFont(font)
-  gfx.print(CELEBRATE_SUFFIX, x + pw + kw, ty)
+  gfx.print(suffix, x + pw + kw, ty)
+end
+
+-- Win modal.
+
+function draw_celebrate()
+  if not (GS.celebrating or GS.won) then
+    return
+  end
+  gfx.setColor(Color[Color.white + Color.bright])
+  draw_keycap_banner(CELEBRATE_PREFIX, CELEBRATE_SUFFIX)
+end
+
+-- Failed-run modal (miss / crash): a calm "not yet",
+-- never punitive. Hidden during a win so they never stack.
+
+function draw_failed()
+  if not GS.failed or GS.celebrating or GS.won then
+    return
+  end
+  local prefix = FAILED_MISS_PREFIX
+  if GS.failed == "crash" then
+    prefix = FAILED_CRASH_PREFIX
+  end
+  gfx.setColor(Color[Color.white + Color.bright])
+  draw_keycap_banner(prefix, FAILED_SUFFIX)
 end
 
 function draw_player(scale)
@@ -520,4 +538,5 @@ function draw_scene()
   draw_macros_list()
   draw_macro_ui()
   draw_celebrate()
+  draw_failed()
 end

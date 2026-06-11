@@ -92,3 +92,10 @@ PRIMITIVES = {
 
 CELEBRATE_PREFIX = "Congratulations! Press "
 CELEBRATE_SUFFIX = " to proceed."
+
+-- Failed-run modal: prefix + Tab keycap + suffix.
+-- A calm "not yet", never punitive.
+
+FAILED_MISS_PREFIX = "Goal not reached. Press "
+FAILED_CRASH_PREFIX = "Crashed. Press "
+FAILED_SUFFIX = " to try again."

@@ -236,6 +236,7 @@ function start_level()
   reset_level()
   echo_lines = { }
   GS.crash = nil
+  GS.invalid = nil
   GS.program = nil
   GS.running = false
   macros = clone_macros(GS.base_macros)
@@ -435,6 +436,7 @@ function enter_failed(kind)
   player.queue_refs = { }
   GS.running = false
   GS.failed = kind
+  ctrl_update = nil
 end
 
 function on_fail()
@@ -504,16 +506,14 @@ end
 -- Editor input processing
 
 -- The editor runs the whole program from the start each
--- time. A run that ends without a win pauses with a hint
--- and waits for Tab to reset the robot to its start; a
--- win leaves the program on screen. The statusline
--- carries the current hint.
+-- time. A miss or crash shows a modal that waits for Tab
+-- (see draw_failed); a syntax error keeps the editor open
+-- and shows its message on this prompt so the child fixes
+-- it in place.
 
 function input_prompt()
-  if GS.failed == "miss" then
-    return "Goal not reached - press Tab to reset position"
-  elseif GS.failed == "crash" then
-    return "Crashed - press Tab to reset position"
+  if GS.invalid then
+    return GS.invalid.msg
   end
   return "Commands:"
 end
@@ -529,9 +529,11 @@ function rearm_input()
   end
 end
 
--- A run that ended without a win. A crash already
--- played the lose sound; a plain miss gets a soft
--- "not yet" cue before the robot returns to start.
+-- A run that ended without a win. A crash already played
+-- the lose sound; a plain miss gets a soft "not yet" cue.
+-- Either way the run freezes input (ctrl_update = nil) and
+-- shows the failed modal until Tab; the robot holds in
+-- place behind it.
 
 function finish_run()
   GS.running = false
@@ -540,6 +542,7 @@ function finish_run()
   end
   sfx.toggle()
   GS.failed = "miss"
+  ctrl_update = nil
 end
 
 function process_user_input()
@@ -553,18 +556,42 @@ end
 function start_program(text)
   GS.failed = nil
   local lines = string.lines(text)
-  if not validate_input(lines) then
+  macros = clone_macros(GS.base_macros)
+  local bad = validate_program(lines)
+  if bad then
     sfx.wrong()
-    input_text(input_prompt(), string.lines(text))
+    GS.invalid = bad
+    GS.program = text
+    echo_lines = lines
+    input_text(input_prompt(), lines)
     return
   end
+  GS.invalid = nil
   GS.program = text
   GS.crash = nil
   reset_level()
-  macros = clone_macros(GS.base_macros)
   echo_lines = lines
   process_input(lines, 0)
   GS.running = true
+end
+
+-- Tab from a failed-run modal: send the robot home, drop
+-- the failed run's macros back to the level base, and
+-- reopen the editor with the kept program text.
+
+function reset_after_fail()
+  reset_level()
+  GS.crash = nil
+  GS.invalid = nil
+  macros = clone_macros(GS.base_macros)
+  rearm_editor()
+end
+
+function rearm_editor()
+  ctrl_pressed = nil
+  ctrl_update = process_user_input
+  GS.input = user_input()
+  input_text("Commands:", string.lines(GS.program or ""))
 end
 
 -- Main Loop
@@ -576,6 +603,8 @@ function poll_tab_progression()
   local edge = down and not tab_was_down
   if edge and (GS.celebrating or GS.won) then
     next_level()
+  elseif edge and GS.failed then
+    reset_after_fail()
   elseif edge then
     reset_level()
   end
