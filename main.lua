@@ -406,8 +406,62 @@ function next_level()
   end
 end
 
+-- Level navigation commands. "." jumps to the next level
+-- and "," to the previous one; a leading run collapses into
+-- one hop, so "3." / "2," jump three / two levels (clamped
+-- to the first and last). Then a fresh editor is presented:
+-- a plain jump, not a win -- start_level() sets GS.running
+-- false, clears the queue and resets GS.failed, so unlike
+-- next_level() we restore nothing and no "goal not reached"
+-- fires on arrival. The program ends here (commands after
+-- the jump are dropped).
+
+function jump_level(delta)
+  local idx = level_index + delta
+  if idx < 1 then idx = 1 end
+  if #levels < idx then idx = #levels end
+  if idx ~= level_index then
+    GS.base_macros = clone_macros(macros)
+    level_index = idx
+    maze = levels[idx]
+  end
+  start_level()
+end
+
+-- Collapse a leading run of the same command in the queue
+-- so "3." / "2," become a single multi-level jump.
+
+function take_repeats(ch)
+  local n = 1
+  while player.queue[1] == ch do
+    table.remove(player.queue, 1)
+    table.remove(player.queue_refs, 1)
+    n = n + 1
+  end
+  return n
+end
+
+function advance_level()
+  jump_level(take_repeats("."))
+end
+
+function retreat_level()
+  jump_level(-take_repeats(","))
+end
+
+-- TEMPORARY: Shift+Esc cannot reach a program while the
+-- editor input field is active (compy-dl0 / compy-mkr, gated
+-- on the editor API), so "<" exits a run to the menu in the
+-- meantime. Remove "<" when Shift+Esc works in the editor.
+
+function exit_to_menu()
+  to_menu()
+end
+
 CMD_HANDLERS = {
-  ["."] = next_level,
+  ["."] = advance_level,
+  [","] = retreat_level,
+  ["<"] = exit_to_menu,
   L = start_turn,
   R = start_turn,
   F = start_move,

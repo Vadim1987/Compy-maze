@@ -61,7 +61,7 @@ function split_statements(line)
 end
 
 -- A runnable command char: a primitive (includes the
--- no-op ".") or a macro known at this point.
+-- level-jump "." and ",") or a macro known at this point.
 
 function is_cmd_char(ch, known)
   return PRIMITIVES[ch] or known[ch] == true
@@ -232,7 +232,7 @@ function enqueue_commands(line_idx, seg, base_col)
       col_from = base_col + p.col_from - 1,
       col_to = base_col + p.col_to - 1
     })
-    if p.cmd ~= "." then
+    if not SILENT_CMDS[p.cmd] then
       sfx.ping()
     end
   end

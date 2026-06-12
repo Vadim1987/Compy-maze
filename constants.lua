@@ -85,7 +85,18 @@ PRIMITIVES = {
   B = true,
   L = true,
   R = true,
-  ["."] = true
+  ["."] = true,
+  [","] = true,
+  ["<"] = true
+}
+
+-- Control commands that change level/screen instead of
+-- moving, so they emit no movement ping.
+
+SILENT_CMDS = {
+  ["."] = true,
+  [","] = true,
+  ["<"] = true
 }
 
 -- Celebrate message: prefix + Tab keycap + suffix

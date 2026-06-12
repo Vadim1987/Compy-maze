@@ -96,7 +96,7 @@ end
 
 function process_cmd(k)
   local cmd = string.upper(k)
-  if string.find("NSEWFBLR.", cmd) then
+  if string.find("NSEWFBLR.,<", cmd) then
     table.insert(player.queue, cmd)
     table.insert(player.queue_refs, NO_REF)
     return true
@@ -105,7 +105,7 @@ function process_cmd(k)
 end
 
 function ping_cmd(ch)
-  if process_cmd(ch) and ch ~= "." then
+  if process_cmd(ch) and not SILENT_CMDS[ch] then
     sfx.ping()
   end
 end
