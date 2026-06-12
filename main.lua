@@ -727,17 +727,16 @@ function is_shift_down()
   return d("lshift") or d("rshift")
 end
 
--- Shift+Esc steps back one level: game -> menu, and
--- menu -> quit to the console. On editor levels the
--- text modal consumes keys, so this fires only on
--- direct-control levels and the menu; Ctrl+Esc always
--- exits via the host.
+-- Shift+Esc steps back one level within the game: a game
+-- level returns to the track menu; the menu is the top
+-- level, so it is a no-op there (UX standard -- leaving the
+-- game to the console is Ctrl+Esc / the host). On editor
+-- levels the text modal consumes keys, so this reaches us
+-- only on direct-control levels and the menu.
 
 function on_escape()
   if GS.mode == "game" then
     to_menu()
-  else
-    love.event.quit()
   end
 end
 
