@@ -619,6 +619,10 @@ end
 
 function start_program(text)
   GS.failed = nil
+  -- Any submit clears the previous run's crash marker; it
+  -- otherwise persists through Tab so it stays visible
+  -- while the child edits.
+  GS.crash = nil
   local lines = string.lines(text)
   macros = clone_macros(GS.base_macros)
   local bad = validate_program(lines)
@@ -632,7 +636,6 @@ function start_program(text)
   end
   GS.invalid = nil
   GS.program = text
-  GS.crash = nil
   reset_level()
   echo_lines = lines
   process_input(lines, 0)
@@ -641,11 +644,12 @@ end
 
 -- Tab from a failed-run modal: send the robot home, drop
 -- the failed run's macros back to the level base, and
--- reopen the editor with the kept program text.
+-- reopen the editor with the kept program text. The crash
+-- marker stays red until the next submit so the child can
+-- glance at what went wrong while editing.
 
 function reset_after_fail()
   reset_level()
-  GS.crash = nil
   GS.invalid = nil
   macros = clone_macros(GS.base_macros)
   rearm_editor()
