@@ -540,6 +540,16 @@ function finish_run()
   if GS.won or GS.celebrating or GS.crash then
     return
   end
+  -- A Sokoban goal is a permanent state, not a position:
+  -- once every box sits on a target the level is won, even
+  -- if later commands moved the robot on. Pushing a box back
+  -- off a target lowers filled_count, so this is false again
+  -- until they are all on target once more.
+  if 0 < GS.box_goal_count
+       and GS.filled_count == GS.box_goal_count then
+    win_level(nil, sfx.wow)
+    return
+  end
   sfx.toggle()
   GS.failed = "miss"
   ctrl_update = nil
