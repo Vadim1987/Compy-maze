@@ -183,16 +183,41 @@ T.it("enqueue: queue, refs, one ping per prim", function()
   T.eq(pings, 3)
 end)
 
-print("\n== PENDING: target behavior (lands in later steps) ==")
+-- Whitespace-as-separator (step 2). A space separates
+-- tokens but never glues a count to its command, so the
+-- adjacency case "3 E" above stays invalid.
 
--- Step 2: whitespace-as-separator. These are invalid today
--- (a space is a bad token) and must become valid / shift
--- the error past the space.
-T.pending("whitespace: '3E 3N' validates")
-T.pending("whitespace: 'X X' validates")
-T.pending("whitespace: 'X=3E 2N' then 'X' validates")
-T.pending("whitespace: 'E Q' -> Unknown command: Q at col 3")
-T.pending("whitespace: echo/ref cols aligned past spaces")
+T.it("whitespace: '3E 3N' validates", function()
+  T.eq(validate_program({ "3E 3N" }), nil)
+end)
+
+T.it("whitespace: spaced macro uses validate", function()
+  T.eq(validate_program({ "X=3R", "X X" }), nil)
+end)
+
+T.it("whitespace: 'X=3E 2N' then 'X' validates", function()
+  T.eq(validate_program({ "X=3E 2N", "X" }), nil)
+end)
+
+T.it("whitespace: 'E Q' -> Unknown Q at col 3", function()
+  T.eq(validate_program({ "E Q" }),
+    mark(1, 3, "Unknown command: Q"))
+end)
+
+T.it("whitespace: refs stay aligned past a space", function()
+  T.eq(expand_with_refs("2E N"),
+    { prim("E", 1, 2), prim("E", 1, 2), prim("N", 4, 4) })
+end)
+
+-- A space is only a separator: it must not survive into a
+-- stored macro body as a command.
+
+T.it("whitespace: macro body drops the separator", function()
+  define_macro("X=3E 2N")
+  T.eq(macros.X, "EEENN")
+end)
+
+print("\n== PENDING: target behavior (lands in later steps) ==")
 
 -- Draw program: `C` is a primitive, silent (no ping).
 T.pending("draw: 'C' validates under draw PRIMITIVES")

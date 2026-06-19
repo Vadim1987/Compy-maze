@@ -22,8 +22,8 @@ end
 -- Expand loops and macros
 
 function expand(text)
-  local expanded = expand_loops(text:upper())
-  return expand_macros(expanded)
+  local clean = text:upper():gsub(" ", "")
+  return expand_macros(expand_loops(clean))
 end
 
 -- Define a macro: X=3RF
@@ -93,7 +93,7 @@ function bad_token(seg, known)
       local nxt = check_loop(seg, i, known)
       if not nxt then return i, ch end
       i = nxt
-    elseif is_cmd_char(ch, known) then
+    elseif ch == " " or is_cmd_char(ch, known) then
       i = i + 1
     else
       return i, ch
@@ -176,7 +176,9 @@ function expand_with_refs(line)
   local i = 1
   while i <= #line do
     local ch = line:sub(i, i)
-    if ch:match("%d") then
+    if ch == " " then
+      i = i + 1
+    elseif ch:match("%d") then
       i = expand_loop_at(line, i, prims)
     else
       append_one(prims, ch, i, i)

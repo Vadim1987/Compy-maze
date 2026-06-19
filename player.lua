@@ -96,7 +96,7 @@ end
 
 function process_cmd(k)
   local cmd = string.upper(k)
-  if string.find("NSEWFBLR.,<", cmd) then
+  if PRIMITIVES[cmd] then
     table.insert(player.queue, cmd)
     table.insert(player.queue_refs, NO_REF)
     return true
