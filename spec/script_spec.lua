@@ -14,7 +14,8 @@
 
 local here = arg[0]:match("^(.*)/[^/]*$") or "."
 dofile(here .. "/support.lua")
-dofile(here .. "/../constants.lua") -- real PRIMITIVES
+dofile(here .. "/../core_constants.lua") -- core PRIMITIVES
+dofile(here .. "/../maze_constants.lua") -- + maze . , <
 dofile(here .. "/../script.lua") -- code under test
 
 -- A single-char error marker, as invalid_mark builds it.
@@ -39,6 +40,21 @@ local function prim(cmd, from, to)
 end
 
 print("== ACTIVE: behavior that must be preserved ==")
+
+-- After the constants split, core + maze extras must equal
+-- the historical maze command sets, or the maze parser
+-- would silently change which tokens it accepts.
+
+T.it("maze constants: primitive set reconstituted", function()
+  T.eq(PRIMITIVES, {
+    N = true, E = true, S = true, W = true,
+    F = true, B = true, L = true, R = true,
+    ["."] = true, [","] = true, ["<"] = true
+  })
+  T.eq(SILENT_CMDS, {
+    ["."] = true, [","] = true, ["<"] = true
+  })
+end)
 
 -- validate_program -------------------------------------
 

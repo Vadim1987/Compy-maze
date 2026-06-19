@@ -2,7 +2,8 @@
 
 -- Maze game: guide a player to the destination!
 
-require("constants")
+require("core_constants")
+require("maze_constants")
 require("controls")
 require("graphics")
 require("levels")
