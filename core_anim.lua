@@ -78,11 +78,10 @@ function finish_move(a)
   end
 end
 
--- Per-app hook run after a move or turn settles. The
--- maze wires this to its goal check; draw leaves it a
--- no-op so the core engine carries no maze references.
-
-function after_step() end
+-- after_step() is supplied by the app and called by the
+-- finishers below once a move or turn settles: the maze
+-- checks its goal, draw does nothing. The core names it
+-- but never defines it.
 
 ANIM_FINISHERS = { }
 
