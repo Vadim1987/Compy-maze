@@ -67,6 +67,12 @@ function is_wall(col, row)
   return ch == "#"
 end
 
+-- The boundary seam: a move is blocked by a wall or the
+-- grid edge. Draw overrides this with an off-canvas test;
+-- its move handler skips silently instead of bumping.
+
+blocked = is_wall
+
 function box_at(col, row)
   return GS.box_map[pos_key(col, row)]
 end
@@ -179,7 +185,7 @@ end
 
 function start_move(cmd, ref)
   local tc, tr = move_cmd_target(cmd)
-  if is_wall(tc, tr) then
+  if blocked(tc, tr) then
     start_bump(cmd, ref)
   else
     local box = box_at(tc, tr)
