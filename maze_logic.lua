@@ -381,3 +381,21 @@ end
 -- The maze wires the post-step hook to its goal check.
 
 after_step = check_goal
+
+-- Maze wires the post-validate hook to its level reset.
+
+before_run = reset_level
+
+-- Tab from a failed-run modal: send the robot home, drop
+-- the failed run's macros back to the level base, and
+-- reopen the editor with the kept program text. The crash
+-- marker stays red until the next submit so the child can
+-- glance at what went wrong while editing.
+
+function reset_after_fail()
+  reset_level()
+  GS.invalid = nil
+  macros = clone_macros(GS.base_macros)
+  rearm_editor()
+end
+
