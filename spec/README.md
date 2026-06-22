@@ -14,7 +14,7 @@ From the repository root (also works from inside `spec/`):
 
 Output ends with a summary line:
 
-    20 passed, 0 failed, 7 pending
+    29 passed, 0 failed, 0 pending
 
 Exit code is `0` when nothing failed, non-zero otherwise,
 so the same command works in a CI check. A failure prints

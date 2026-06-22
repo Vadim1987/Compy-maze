@@ -9,13 +9,16 @@ CELL_PARSERS = { }
 
 CELL_PARSERS["*"] = function(c, r)
   GS.goal_map[pos_key(c, r)] = {
-    col = c, row = r, radius = 1
+    col = c,
+    row = r,
+    radius = 1
   }
 end
 
 CELL_PARSERS["B"] = function(c, r)
   GS.box_map[pos_key(c, r)] = {
-    col = c, row = r
+    col = c,
+    row = r
   }
 end
 
@@ -30,7 +33,7 @@ end
 function parse_cell(ch, c, r)
   if DIR_DELTA[ch] then
     player_reset(c, r, ch)
-    return 
+    return
   end
   local fn = CELL_PARSERS[ch]
   if fn then
@@ -100,7 +103,7 @@ end
 function check_goal()
   local k = pos_key(player.col, player.row)
   local g = GS.goal_map[k]
-  if g and #player.queue == 0 then
+  if g and #(player.queue) == 0 then
     win_level(g, sfx.win)
   end
 end
@@ -112,7 +115,7 @@ function check_box_goals(old_key, new_key)
   if GS.box_goal_map[new_key] then
     GS.filled_count = GS.filled_count + 1
   end
-  if box_goal_met() and #player.queue == 0 then
+  if box_goal_met() and #(player.queue) == 0 then
     win_level(nil, sfx.wow)
   end
 end
@@ -126,14 +129,14 @@ function reset_level()
 end
 
 function apply_attrs()
-  if maze.controls ~= nil then
+  if maze.controls then
     cur_controls = maze.controls
   end
-  if maze.progression ~= nil then
+  if maze.progression then
     cur_progression = maze.progression
   end
   cur_legend = maze.legend
-  if maze.grid ~= nil then
+  if maze.grid then
     cur_grid = maze.grid
   end
   cur_background = maze.background
@@ -267,8 +270,12 @@ end
 
 function jump_level(delta)
   local idx = level_index + delta
-  if idx < 1 then idx = 1 end
-  if #levels < idx then idx = #levels end
+  if idx < 1 then
+    idx = 1
+  end
+  if #levels < idx then
+    idx = #levels
+  end
   if idx ~= level_index then
     GS.base_macros = clone_macros(macros)
     level_index = idx

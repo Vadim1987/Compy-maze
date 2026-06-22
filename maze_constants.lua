@@ -37,12 +37,12 @@ MACRO_LINE_LEN = 8
 -- "." next level, "," previous level, "<" exit to menu.
 -- All silent (no movement ping).
 
-MAZE_CMDS = { ".", ",", "<" }
-
-for _, c in ipairs(MAZE_CMDS) do
-  PRIMITIVES[c] = true
-  SILENT_CMDS[c] = true
-end
+PRIMITIVES["."] = true
+PRIMITIVES[","] = true
+PRIMITIVES["<"] = true
+SILENT_CMDS["."] = true
+SILENT_CMDS[","] = true
+SILENT_CMDS["<"] = true
 
 -- Celebrate message: prefix + Tab keycap + suffix.
 

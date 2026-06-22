@@ -7,13 +7,14 @@
 
 GRID = { }
 
-function init_grid(rows, cols)
+function init_grid(rows, cols, pad_bottom)
   GRID.rows = rows
   GRID.cols = cols
   local w, h = gfx.getDimensions()
-  GRID.cell = math.min(w / cols, h / rows)
+  local avail_h = h - (pad_bottom or 0)
+  GRID.cell = math.min(w / cols, avail_h / rows)
   GRID.offset_x = (w - GRID.cell * cols) / 2
-  GRID.offset_y = (h - GRID.cell * rows) / 2
+  GRID.offset_y = (avail_h - GRID.cell * rows) / 2
   local long_side = math.max(PLAYER.sprite_w, PLAYER.sprite_h)
   GRID.scale = GRID.cell * PLAYER.cell_fill / long_side
   GRID.bump_dist = (GRID.cell - long_side * GRID.scale) / 2
@@ -99,6 +100,18 @@ function finish_anim()
   local a = player.anim
   player.anim = nil
   ANIM_FINISHERS[a.kind](a)
+end
+
+-- Pull the next queued command and dispatch it through
+-- the app's CMD_HANDLERS. Runs once per idle frame from
+-- love.update when no animation is in flight.
+
+function execute_next()
+  local cmd, ref = dequeue()
+  local fn = CMD_HANDLERS[cmd]
+  if fn then
+    fn(cmd, ref)
+  end
 end
 
 -- Update

@@ -38,9 +38,7 @@ TRACK = {
 
 -- Movement trail style.
 
-TRACE = {
-  radius_frac = 0.08
-}
+TRACE = { radius_frac = 0.08 }
 
 -- Maximum echo lines visible on screen.
 

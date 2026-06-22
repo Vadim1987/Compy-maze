@@ -82,7 +82,7 @@ function start_program(text)
 end
 
 function rearm_input()
-  if player.anim or 0 < #player.queue then
+  if player.anim or 0 < #(player.queue) then
     return
   end
   if GS.running then
@@ -92,9 +92,20 @@ function rearm_input()
   end
 end
 
-function rearm_editor()
+-- Arm the command editor with initial text. editor()
+-- starts empty; rearm_editor() keeps the last program.
+
+function arm_editor(text)
   ctrl_pressed = nil
   ctrl_update = process_user_input
   GS.input = user_input()
-  input_text("Commands:", string.lines(GS.program or ""))
+  input_text("Commands:", string.lines(text))
+end
+
+function editor()
+  arm_editor("")
+end
+
+function rearm_editor()
+  arm_editor(GS.program or "")
 end

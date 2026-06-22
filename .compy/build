@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+#
+# .compy/build -- emit the shipped Compy projects from this
+# single source repo (the .compy/build convention).
+#
+# Invoked by the host build as:
+#     cd <repo> && .compy/build <out-dir>
+# with an absolute, fresh <out-dir>. It populates
+#     <out-dir>/maze/   and   <out-dir>/draw/
+# each a valid Compy project (a direct main.lua), named
+# exactly as its manifest entry. Works relative to its own
+# location, is deterministic, and needs no network.
+#
+# maze and draw share the command core; a Compy project is a
+# flat, self-contained folder with no runtime sharing, so the
+# core is physically copied into each.
+#
+set -eu
+
+SRC="$(cd "$(dirname "$0")/.." && pwd)"
+OUT="${1:?usage: .compy/build <out-dir> (absolute, fresh)}"
+
+# Shared command core + the green robot sprite -> both.
+CORE="core_constants core_sprites core_render core_editor
+      core_anim player script
+      ROBOT_03_a ROBOT_03_b1 ROBOT_03_b2 ROBOT_03_c"
+
+# Maze-only program. maze_main is the entry, emitted as
+# main.lua.
+MAZE="maze_constants maze_decorations maze_render maze_logic
+      controls levels menu macro keyboard_graphics
+      BOX_03 TARGET_02
+      LABIRINT_NEW_01 LABIRINT_NEW_02 LABIRINT_NEW_03
+      LABIRINT_NEW_04 LABIRINT_NEW_05"
+
+# Draw-only program. draw_main is the entry, emitted as
+# main.lua.
+DRAW="draw_constants draw_render"
+
+copy_lua() { for m in $2; do cp "$SRC/$m.lua" "$1/"; done; }
+
+# assets/fonts/ ships in both when an assets/ tree is present
+# (the font is runtime-provided here, so usually absent).
+copy_assets() {
+  if [ -d "$SRC/assets" ]; then cp -r "$SRC/assets" "$1/"; fi
+}
+
+emit_maze() {
+  local d="$OUT/maze"
+  mkdir -p "$d"
+  copy_lua "$d" "$CORE"
+  copy_lua "$d" "$MAZE"
+  cp "$SRC/maze_main.lua" "$d/main.lua"
+  cp "$SRC/legend.txt" "$d/"
+  cp "$SRC/README_maze.md" "$d/README.md"
+  copy_assets "$d"
+}
+
+emit_draw() {
+  local d="$OUT/draw"
+  mkdir -p "$d"
+  copy_lua "$d" "$CORE"
+  copy_lua "$d" "$DRAW"
+  cp "$SRC/draw_main.lua" "$d/main.lua"
+  cp "$SRC/README_draw.md" "$d/README.md"
+  copy_assets "$d"
+}
+
+emit_maze
+emit_draw
+echo "emitted $OUT/maze $OUT/draw" >&2

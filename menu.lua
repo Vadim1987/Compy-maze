@@ -4,13 +4,27 @@
 -- of the mouse and keyboard games (cream field, dark
 -- centered numbered list).
 
-COL_BG = { 0.93, 0.93, 0.90 }
-COL_TEXT = { 0.16, 0.16, 0.16 }
-COL_DIM = { 0.50, 0.50, 0.48 }
+COL_BG = {
+  0.93,
+  0.93,
+  0.9
+}
+COL_TEXT = {
+  0.16,
+  0.16,
+  0.16
+}
+COL_DIM = {
+  0.5,
+  0.5,
+  0.48
+}
+
+-- menu_draw restores the runtime font on exit so the
+-- in-game HUD keeps inheriting it; the menu's UI font is
+-- local to this function.
 
 function menu_draw()
-  -- Restore the runtime font on exit so the in-game HUD
-  -- keeps inheriting it (the menu's UI font is local here).
   local prev_font = gfx.getFont()
   local w, h = gfx.getDimensions()
   gfx.setColor(COL_BG)

@@ -183,7 +183,7 @@ width.space = 59.5 * SCALE
 -- key caps
 keycap = {
   space = function()
-    
+
   end
 }
 

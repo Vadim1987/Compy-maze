@@ -20,7 +20,7 @@ function start_recording(key)
   local name = key:upper()
   if PRIMITIVES[name] then
     sfx.wrong()
-    return 
+    return
   end
   macro_state.recording = true
   macro_state.name = name
@@ -32,7 +32,7 @@ end
 
 function record_key(key)
   if MAX_MACRO_LEN <= #(macro_state.body) then
-    return 
+    return
   end
   local upper = key:upper()
   if PRIMITIVES[upper] or macros[upper] then
@@ -45,7 +45,7 @@ end
 
 function finish_recording()
   if not macro_state.recording then
-    return 
+    return
   end
   macro_state.recording = false
   local text = table.concat(macro_state.body)
@@ -72,7 +72,7 @@ end
 function handle_key(k)
   if SHIFT_KEYS[k] then
     macro_state.shift_held = true
-    return 
+    return
   elseif macro_state.recording then
     record_key(k)
   elseif macro_state.shift_held then

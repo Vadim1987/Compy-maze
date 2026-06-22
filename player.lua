@@ -79,17 +79,26 @@ player = {
   last_turn = nil
 }
 
-function player_reset(col, row, dir)
+-- Put the robot at a cell facing dir, clearing its trail
+-- and animation but leaving the program queue alone.
+
+function reset_robot(col, row, dir)
   player.col = col
   player.row = row
   player.dir = dir
-  player.queue = { }
-  player.queue_refs = { }
   player.anim = nil
   player.traces = { }
   player.track_offset_l = 0
   player.track_offset_r = 0
   player.last_turn = nil
+end
+
+-- Full reset: the robot plus the program queue.
+
+function player_reset(col, row, dir)
+  reset_robot(col, row, dir)
+  player.queue = { }
+  player.queue_refs = { }
 end
 
 -- Command queue

@@ -145,7 +145,8 @@ end
 
 function set_echo_color(line_idx, col, lit)
   if echo_marked(GS.crash, line_idx, col)
-       or echo_marked(GS.invalid, line_idx, col) then
+       or echo_marked(GS.invalid, line_idx, col)
+  then
     gfx.setColor(Color[Color.red + Color.bright])
     return
   end
@@ -169,31 +170,13 @@ end
 
 function draw_echo()
   if cur_controls ~= editor then
-    return 
+    return
   end
   local fh = gfx.getFont():getHeight()
   local start = math.max(1, (#echo_lines - MAX_ECHO_LINES) + 1)
   for i = start, #echo_lines do
     draw_echo_line(echo_lines[i], i, (i - start) * fh)
   end
-end
-
--- Centered "<prefix> [Tab] <suffix>" banner, shared by the
--- win and failed-run modals. draw_key restores the font.
-
-function draw_keycap_banner(prefix, suffix)
-  local w, h = gfx.getDimensions()
-  local font = gfx.getFont()
-  local pw = font:getWidth(prefix)
-  local sw = font:getWidth(suffix)
-  local kw, kh = width.tab, height.tab
-  local x = (((w - pw) - kw) - sw) / 2
-  local ky = (h - kh) / 2
-  local ty = ky + (kh - font:getHeight()) / 2
-  gfx.print(prefix, x, ty)
-  draw_key(x + pw, ky, "tab")
-  gfx.setFont(font)
-  gfx.print(suffix, x + pw + kw, ty)
 end
 
 function draw_player(scale)

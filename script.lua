@@ -46,25 +46,22 @@ end
 function split_statements(line)
   local out = { }
   local from = 1
-  while true do
-    local semi = line:find(";", from, true)
-    local to = semi and (semi - 1) or #line
+  while from <= #line + 1 do
+    local semi = line:find(";", from, true) or (#line + 1)
     table.insert(out, {
-      text = line:sub(from, to),
+      text = line:sub(from, semi - 1),
       col = from
     })
-    if not semi then
-      return out
-    end
     from = semi + 1
   end
+  return out
 end
 
 -- A runnable command char: a primitive (includes the
 -- level-jump "." and ",") or a macro known at this point.
 
 function is_cmd_char(ch, known)
-  return PRIMITIVES[ch] or known[ch] == true
+  return PRIMITIVES[ch] or known[ch]
 end
 
 -- A digit count must be followed by a command char.
@@ -75,7 +72,8 @@ function check_loop(seg, i, known)
   local nc = i + #num
   local nch = seg:sub(nc, nc)
   if nch == "" or nch:match("%d")
-       or not is_cmd_char(nch, known) then
+       or not is_cmd_char(nch, known)
+  then
     return nil
   end
   return nc + 1
@@ -91,7 +89,9 @@ function bad_token(seg, known)
     local ch = seg:sub(i, i)
     if ch:match("%d") then
       local nxt = check_loop(seg, i, known)
-      if not nxt then return i, ch end
+      if not nxt then
+        return i, ch
+      end
       i = nxt
     elseif ch == " " or is_cmd_char(ch, known) then
       i = i + 1

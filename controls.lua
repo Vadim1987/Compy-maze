@@ -5,7 +5,7 @@
 -- ctrl_pressed(k) from love.keypressed
 -- ctrl_update() from love.update
 
--- Keyboard controls 
+-- Keyboard controls
 
 function keys()
   ctrl_pressed = handle_key
@@ -13,13 +13,6 @@ function keys()
 end
 
 -- Command line controls
-
-function editor()
-  ctrl_pressed = nil
-  ctrl_update = process_user_input
-  GS.input = user_input()
-  input_text("Commands:", string.lines(""))
-end
 
 -- Progression modes
 

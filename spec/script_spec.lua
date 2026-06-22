@@ -3,14 +3,10 @@
 -- Headless characterization spec for the command core
 -- (script.lua). Run from anywhere:  lua5.1 spec/script_spec.lua
 --
--- The ACTIVE cases capture today's behavior and must stay
--- green through the core extraction and the whitespace
--- change (the "behavior-identical maze" guarantee).
---
--- The PENDING cases document target behavior that lands
--- later: whitespace-as-separator (step 2) and draw's `C`
--- token. They are recorded, not run, so the baseline is
--- green until the feature exists.
+-- The cases cover the preserved maze behavior (the
+-- "behavior-identical maze" guarantee), the whitespace-as-
+-- separator change (step 2), and draw's `C` token (silent,
+-- layered on the core set). All run; none are pending.
 
 local here = arg[0]:match("^(.*)/[^/]*$") or "."
 dofile(here .. "/support.lua")
@@ -217,10 +213,35 @@ T.it("whitespace: macro body drops the separator", function()
   T.eq(macros.X, "EEENN")
 end)
 
-print("\n== PENDING: target behavior (lands in later steps) ==")
+print("\n== Draw `C` token (layered on the core set) ==")
 
--- Draw program: `C` is a primitive, silent (no ping).
-T.pending("draw: 'C' validates under draw PRIMITIVES")
-T.pending("draw: 'C' enqueues and emits no ping (SILENT_CMDS)")
+-- draw_constants.lua adds C to PRIMITIVES and marks it
+-- silent. Layer it here, restore after, so the maze set
+-- asserted above stays untouched.
+
+T.it("draw: 'C' validates under draw PRIMITIVES", function()
+  PRIMITIVES.C = true
+  SILENT_CMDS.C = true
+  local solo = validate_program({ "C" })
+  local mixed = validate_program({ "E C E" })
+  PRIMITIVES.C = nil
+  SILENT_CMDS.C = nil
+  T.eq(solo, nil)
+  T.eq(mixed, nil)
+end)
+
+T.it("draw: 'C' enqueues and emits no ping", function()
+  PRIMITIVES.C = true
+  SILENT_CMDS.C = true
+  local pings = 0
+  local saved = sfx.ping
+  sfx.ping = function() pings = pings + 1 end
+  process_input({ "E C E" }, 0)
+  sfx.ping = saved
+  PRIMITIVES.C = nil
+  SILENT_CMDS.C = nil
+  T.eq(player.queue, { "E", "C", "E" })
+  T.eq(pings, 2)
+end)
 
 T.run()

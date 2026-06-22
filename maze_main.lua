@@ -9,10 +9,10 @@ require("core_sprites")
 require("maze_decorations")
 require("core_render")
 require("maze_render")
+require("core_editor")
 require("levels")
 require("player")
 require("core_anim")
-require("core_editor")
 require("maze_logic")
 require("keyboard_graphics")
 require("macro")
@@ -58,17 +58,7 @@ GS = {
 }
 
 function ensure_init()
-  if not GS.init then
-    GS.init = true
-  end
-end
-
-function execute_next()
-  local cmd, ref = dequeue()
-  local fn = CMD_HANDLERS[cmd]
-  if fn then
-    fn(cmd, ref)
-  end
+  GS.init = true
 end
 
 -- Main Loop
@@ -78,12 +68,14 @@ tab_was_down = false
 function poll_tab_progression()
   local down = love.keyboard.isDown("tab")
   local edge = down and not tab_was_down
-  if edge and (GS.celebrating or GS.won) then
-    next_level()
-  elseif edge and GS.failed then
-    reset_after_fail()
-  elseif edge then
-    reset_level()
+  if edge then
+    if GS.celebrating or GS.won then
+      next_level()
+    elseif GS.failed then
+      reset_after_fail()
+    else
+      reset_level()
+    end
   end
   tab_was_down = down
 end
@@ -96,12 +88,11 @@ function to_menu()
   ctrl_pressed = nil
 end
 
-function love.update(dt)
-  ensure_init()
-  if GS.mode ~= "game" then
-    return
-  end
-  poll_tab_progression()
+-- Advance the running program one frame: progress any
+-- animation, then either keep its tracks turning or pull
+-- the next command. Stepping pauses during a win.
+
+function step_program(dt)
   if player.anim then
     advance_anim(dt)
   end
@@ -110,6 +101,15 @@ function love.update(dt)
   elseif not GS.celebrating then
     execute_next()
   end
+end
+
+function love.update(dt)
+  ensure_init()
+  if GS.mode ~= "game" then
+    return
+  end
+  poll_tab_progression()
+  step_program(dt)
   if ctrl_update then
     ctrl_update()
   end
@@ -176,9 +176,7 @@ function love.keypressed(k)
   end
 end
 
-function love.keyreleased(k)
-  release_shift(k)
-end
+love.keyreleased = release_shift
 
 function love.resize()
   if GS.init and GS.mode == "game" then

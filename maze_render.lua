@@ -55,7 +55,7 @@ end
 
 function draw_grid()
   if not cur_grid then
-    return 
+    return
   end
   gfx.setColor(Color[Color.white + Color.bright])
   gfx.setLineWidth(1)
@@ -238,7 +238,7 @@ function draw_macro_ui()
     draw_dim()
   end
   if not macro_state.recording then
-    return 
+    return
   end
   local _, h = gfx.getDimensions()
   local name = macro_state.name:lower()
@@ -285,6 +285,24 @@ function draw_boxes()
   end
 end
 
+-- Centered "<prefix> [Tab] <suffix>" banner, shared by the
+-- win and failed-run modals. draw_key restores the font.
+
+function draw_keycap_banner(prefix, suffix)
+  local w, h = gfx.getDimensions()
+  local font = gfx.getFont()
+  local pw = font:getWidth(prefix)
+  local sw = font:getWidth(suffix)
+  local kw, kh = width.tab, height.tab
+  local x = (((w - pw) - kw) - sw) / 2
+  local ky = (h - kh) / 2
+  local ty = ky + (kh - font:getHeight()) / 2
+  gfx.print(prefix, x, ty)
+  draw_key(x + pw, ky, "tab")
+  gfx.setFont(font)
+  gfx.print(suffix, x + pw + kw, ty)
+end
+
 -- Win modal.
 
 function draw_celebrate()
@@ -318,7 +336,7 @@ function draw_level_indicator()
   local font = gfx.getFont()
   local label = "Maze " .. level_index
   local m = font:getHeight() / 2
-  local x = gfx.getWidth() - font:getWidth(label) - m
+  local x = (gfx.getWidth() - font:getWidth(label)) - m
   gfx.setColor(1, 1, 1, 0.5)
   gfx.print(label, x, m)
 end
