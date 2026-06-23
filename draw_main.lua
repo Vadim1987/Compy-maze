@@ -79,6 +79,31 @@ function editor_band_h()
   return EDITOR_ROWS * gfx.getFont():getHeight()
 end
 
+-- Width to reserve on the right for the corner legend: its
+-- widest line plus a margin.
+
+function legend_band_w()
+  local font = gfx.getFont()
+  local wide = 0
+  for line in (cur_legend .. "\n"):gmatch("(.-)\n") do
+    wide = math.max(wide, font:getWidth(line))
+  end
+  return wide + 2 * font:getHeight()
+end
+
+-- Layout for the draw canvas: a margin of one text row
+-- around the grid (so a single echo line fits above it),
+-- the editor band below, and the grid centered between the
+-- left margin and the legend reserved on the right.
+
+function draw_layout()
+  return {
+    pad_bottom = editor_band_h(),
+    pad_right = legend_band_w(),
+    margin = gfx.getFont():getHeight()
+  }
+end
+
 -- One fixed canvas, the robot seeded at start, the editor
 -- armed. Done once, lazily, when the window is sized.
 
@@ -86,7 +111,8 @@ function ensure_init()
   if GS.init then
     return
   end
-  init_grid(CANVAS.rows, CANVAS.cols, editor_band_h())
+  cur_legend = DRAW_LEGEND
+  init_grid(CANVAS.rows, CANVAS.cols, draw_layout())
   player_reset(START.col, START.row, START.dir)
   editor()
   GS.init = true
@@ -115,7 +141,8 @@ function love.draw()
 end
 
 function love.resize()
-  if GS.init then
-    init_grid(CANVAS.rows, CANVAS.cols, editor_band_h())
+  if not GS.init then
+    return
   end
+  init_grid(CANVAS.rows, CANVAS.cols, draw_layout())
 end

@@ -7,19 +7,30 @@
 
 GRID = { }
 
-function init_grid(rows, cols, pad_bottom)
-  GRID.rows = rows
-  GRID.cols = cols
-  local w, h = gfx.getDimensions()
-  local avail_h = h - (pad_bottom or 0)
-  GRID.cell = math.min(w / cols, avail_h / rows)
-  GRID.offset_x = (w - GRID.cell * cols) / 2
-  GRID.offset_y = (avail_h - GRID.cell * rows) / 2
+-- Sprite scale, bump distance, trace radius and push
+-- path, all derived from the current cell size.
+
+function init_cell_metrics()
   local long_side = math.max(PLAYER.sprite_w, PLAYER.sprite_h)
   GRID.scale = GRID.cell * PLAYER.cell_fill / long_side
   GRID.bump_dist = (GRID.cell - long_side * GRID.scale) / 2
   GRID.trace_r = GRID.cell * TRACE.radius_frac
   GRID.push_path = GRID.bump_dist + GRID.cell + GRID.bump_dist
+end
+
+function init_grid(rows, cols, opts)
+  GRID.rows = rows
+  GRID.cols = cols
+  local o = opts or {}
+  local m = o.margin or 0
+  local w, h = gfx.getDimensions()
+  local avail_w = w - m - (o.pad_right or 0)
+  local avail_h = h - 2 * m - (o.pad_bottom or 0)
+  GRID.cell = math.min(avail_w / cols, avail_h / rows)
+  local slack = (avail_w - GRID.cell * cols) / 2
+  GRID.offset_x = m + slack
+  GRID.offset_y = m + (avail_h - GRID.cell * rows) / 2
+  init_cell_metrics()
 end
 
 function cell_top_left(col, row)

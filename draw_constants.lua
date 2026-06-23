@@ -16,7 +16,7 @@ CANVAS = {
 -- 8x8 grid, whose robot starts bottom-left, sits above the
 -- band, as the runtime's own drawable height drops its rows.
 
-EDITOR_ROWS = 3
+EDITOR_ROWS = 2
 
 -- Robot start: bottom-left cell, facing north.
 
@@ -32,9 +32,17 @@ START = {
 PRIMITIVES.C = true
 SILENT_CMDS.C = true
 
--- Subtle canvas grid: faint, thin lines.
+-- Light off-white canvas with dark-grey grid lines: visible
+-- but soft (spec: light gray or off-white background).
+
+CANVAS_BG = { 0.8, 0.8, 0.78 }
 
 GRID_LINE = {
   width = 1,
-  alpha = 0.15
+  color = { 0.4, 0.4, 0.4 }
 }
+
+-- Command hint shown to the right of the canvas, like maze.
+-- The shared compass already covers N/S/E/W and L/R/F/B.
+
+DRAW_LEGEND = readfile("legend.txt")

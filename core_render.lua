@@ -183,3 +183,20 @@ function draw_player(scale)
   local x, y = current_pos()
   draw_player_at(x, y, current_angle(), scale)
 end
+
+-- Controls legend in the bottom-right corner. Shared by
+-- maze and draw; each sets cur_legend to its own hint.
+
+function draw_legend()
+  if not cur_legend then
+    return
+  end
+  local w, h = gfx.getDimensions()
+  local font = gfx.getFont()
+  local fh = font:getHeight()
+  local fw = font:getWidth(cur_legend)
+  local _, n = cur_legend:gsub("\n", "")
+  local th = fh * (n + 1)
+  gfx.setColor(Color[Color.black])
+  gfx.print(cur_legend, (w - fw) - fh, (h - th) - fh)
+end

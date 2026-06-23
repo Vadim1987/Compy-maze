@@ -7,11 +7,10 @@
 -- Faint grid lines along every cell boundary, always on.
 
 function draw_canvas_grid()
-  local left = GRID.offset_x
-  local top = GRID.offset_y
+  local left, top = GRID.offset_x, GRID.offset_y
   local right = left + GRID.cols * GRID.cell
   local bottom = top + GRID.rows * GRID.cell
-  gfx.setColor(1, 1, 1, GRID_LINE.alpha)
+  gfx.setColor(GRID_LINE.color)
   gfx.setLineWidth(GRID_LINE.width)
   for c = 0, GRID.cols do
     local x = left + c * GRID.cell
@@ -23,11 +22,22 @@ function draw_canvas_grid()
   end
 end
 
--- The whole frame, in z-order: grid, trail, robot, echo.
+-- A light, flat canvas fill behind everything.
+
+function draw_canvas_bg()
+  local w, h = gfx.getDimensions()
+  gfx.setColor(CANVAS_BG)
+  gfx.rectangle("fill", 0, 0, w, h)
+end
+
+-- The whole frame, in z-order: bg, grid, trail, robot,
+-- echo, then the command legend on the right.
 
 function draw_scene()
+  draw_canvas_bg()
   draw_canvas_grid()
   draw_traces()
   draw_player(GRID.scale)
   draw_echo()
+  draw_legend()
 end

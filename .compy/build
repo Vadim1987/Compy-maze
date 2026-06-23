@@ -62,6 +62,7 @@ emit_draw() {
   copy_lua "$d" "$CORE"
   copy_lua "$d" "$DRAW"
   cp "$SRC/draw_main.lua" "$d/main.lua"
+  cp "$SRC/legend.txt" "$d/"
   cp "$SRC/README_draw.md" "$d/README.md"
   copy_assets "$d"
 }

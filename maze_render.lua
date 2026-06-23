@@ -139,22 +139,6 @@ end
 
 ANIM_DRAW_POS.push = push_player_pos
 
--- Show controls legend in the bottom right corner
-
-function draw_legend()
-  if not cur_legend then
-    return
-  end
-  local w, h = gfx.getDimensions()
-  local font = gfx.getFont()
-  local fh = font:getHeight()
-  local fw = font:getWidth(cur_legend)
-  local _, n = cur_legend:gsub("\n", "")
-  local th = fh * (n + 1)
-  gfx.setColor(Color[Color.black])
-  gfx.print(cur_legend, (w - fw) - fh, (h - th) - fh)
-end
-
 -- Letters of currently defined non-empty macros,
 -- shown above the legend in up to 3 lines of 8.
 

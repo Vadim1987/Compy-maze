@@ -1,13 +1,13 @@
 # Maze
 
-A game for learning to program by guiding a turtle
+A game for learning to program by guiding a robot
 through a maze!
 
 ## Goal
 
-Push every yellow box onto a cyan square to win!
-If there is a red circle, you can also win by
-reaching it.
+Reach the diamond to win! Some levels have yellow
+boxes instead — push every box onto a cyan square.
+A few have both.
 
 ## Choosing a Maze
 
@@ -18,8 +18,8 @@ maze. Press a number to begin:
   2 — Plan a path
   3 — All mazes
 
-You can return to this menu while playing to switch
-to a different set of mazes.
+You can return to this menu while playing by
+pressing Shift+Esc.
 
 ## Controls
 
@@ -27,7 +27,7 @@ Each level uses one of two control modes.
 
 ### Key Mode
 
-Press keys to tell the turtle where to go. Each key
+Press keys to tell the robot where to go. Each key
 adds a command and you hear a short ping.
 
 You can give directions on a compass:
@@ -37,7 +37,7 @@ You can give directions on a compass:
   E — East
   W — West
 
-Or tell the turtle to move and turn relative to where
+Or tell the robot to move and turn relative to where
 it is facing:
 
   F — move forward
@@ -46,7 +46,7 @@ it is facing:
   R — turn right
 
 Commands run one after another. You can press several
-keys in a row and the turtle will follow them in order.
+keys in a row and the robot will follow them in order.
 
 #### Recording Shortcuts
 
@@ -76,15 +76,14 @@ in recording mode.
 
 Type commands in the text field at the bottom and
 press Enter to run them. You hear a ping for each
-valid command.
+command that runs.
 
 The same compass and relative commands are available.
-Both uppercase and lowercase letters work. Any other
-characters are ignored.
+Both uppercase and lowercase letters work.
 
 You can type several commands at once, for example
-SSEEF, and they will run in order when you press
-Enter.
+SSEEF. Spaces and semicolons just separate commands,
+so SSEEF, SS EE F, and SS;EE;F all do the same thing.
 
 Entered command lines are echoed on the screen one
 under another with reduced opacity, so the game
@@ -102,7 +101,8 @@ Put a number before a command to repeat it:
 
     3R
 
-This turns right three times.
+This turns right three times. It works with any
+command — turns (3L, 3R) and moves (4N, 3F) too.
 
 #### Defining Shortcuts
 
@@ -127,32 +127,46 @@ names — those are already commands.
 #### Multiple Lines
 
 Press Shift+Enter to type several lines at once. All
-lines run in order when you press Enter. If any line
-has a mistake, nothing runs and you hear a warning
-sound so you can fix it.
+lines run in order when you press Enter.
+
+#### If Something Is Wrong
+
+Before the robot moves, the whole program is checked.
+If a command is not understood, nothing runs: the bad
+letter turns red and a message appears — "Unknown
+command: X" for a stray letter, or "Invalid input"
+otherwise — and you hear a soft sound. Fix it and
+run again.
 
 ## What Happens
 
-The turtle turns and moves with a short animation.
+The robot turns and moves with a short animation.
 
-When moving forward, it leaves a bright trail behind.
-Moving backward leaves no trail.
+When moving forward, it leaves a bright cyan trail
+behind. Moving backward leaves no trail.
 
-If the turtle hits a wall, you hear a sound and the
-maze resets so you can try again.
+If the robot hits a wall, you hear a soft sound and
+it stops. In Key Mode the maze resets so you can try
+again. In Editor Mode a message appears — "Crashed.
+Press Tab to try again." — and your program stays on
+screen with the step that went wrong marked red, so
+you can fix it and run it again.
 
-When you reach the red circle with no commands left
-to run, you hear a victory sound and the circle
-disappears. If more commands are queued, the turtle
+If a program finishes without reaching the goal, you
+see "Goal not reached. Press Tab to try again."
+
+When you reach the diamond with no commands left to
+run, you hear a victory sound and the diamond
+disappears. If more commands are queued, the robot
 passes through without triggering the win.
 
 ## Absolute Direction Reversal
 
-When you send the turtle to the direction directly
+When you send the robot to the direction directly
 opposite to where it currently faces (for example N
 when facing S), it performs a 180-degree turn and
 then moves one step forward. The turn goes in the
-same direction as the last turn the turtle made; if
+same direction as the last turn the robot made; if
 no turn has been made yet, the turn is clockwise.
 
 ## Pushing Boxes
@@ -162,14 +176,16 @@ walking into it. The box moves one square in the
 direction you are pushing.
 
 A box can only be pushed if the square behind it is
-empty. If it cannot move, the turtle bumps against it
+empty. If it cannot move, the robot bumps against it
 like a wall.
 
 ## Box Goals
 
 Some levels have cyan squares on the floor. Push
 every yellow box onto a cyan square to win! You hear
-a victory sound when all boxes are in place.
+a victory sound when all boxes are in place. They
+stay won even if the robot moves on afterward —
+unless you push a box back off a square.
 
 ## Macro Letters
 
@@ -179,69 +195,51 @@ shortcuts and shrinks when you erase them. It spans
 up to 3 lines of up to 8 letters, sorted
 alphabetically. The list persists across levels.
 
-## Level Progression
+## Moving Between Levels
 
-The game has multiple levels. Each level can have
-one of three progression modes:
+When you win, what happens next depends on the level:
 
-### Portal
+- Most levels wait: "Congratulations! Press Tab to
+  proceed." appears with the Tab key shown as a
+  keycap. Press Tab for the next level.
+- Some levels go straight to the next one.
 
-The default mode. Upon winning, the game immediately
-advances to the next level. Leftover commands carry
-over and execute in the new level. Defined shortcuts
-also carry over.
+You can also move between levels yourself:
 
-### Celebrate
+  .  — go to the next level
+  ,  — go back one level
 
-Upon winning, a congratulations message appears on
-screen with the Tab key shown as a keycap. Press Tab
-to proceed to the next level. A win is counted only
-if the command queue is empty at the moment the
-turtle reaches the goal — otherwise the remaining
-commands continue to execute without winning.
+Put a number in front to jump several: 3. jumps three
+levels forward and 2, jumps two back (it stops at the
+first and last level). The program ends at the jump —
+any commands after it are not run.
 
-### Continue
+## Leaving
 
-Upon winning, the player stays on the same level
-and can continue entering commands. The same
-congratulations message appears and remains visible
-while further commands run. Press Tab at any time
-after winning to advance to the next level.
-Crashing into a wall after winning also advances to
-the next level and discards remaining commands. The
-"." command works as usual.
+  Shift+Esc — return to the maze menu
+  Ctrl+Esc  — exit to the console
+  <         — leave a running program back to the menu
 
-## Skip Level
-
-The command "." immediately advances to the next
-level without any animation or sound. It can be
-repeated to skip multiple levels:
-
-    3.
-
-skips three levels. It can also be used in shortcuts
-and combined with other commands:
-
-    FF.FF
-
-moves forward twice, skips to the next level, then
-moves forward twice in the new level.
+While you are typing in the editor, Shift+Esc cannot
+get through, so type < and press Enter to leave a
+running program. Bare Escape does nothing in Key
+Mode; in the editor it clears whatever you have
+typed, so watch out for an accidental right-click.
 
 ## Grid
 
-Some levels display a grid of small white crosses
-in the center of each passable square. The grid can
-be toggled on or off by pressing the Menu key.
+Some levels display a grid of small white crosses in
+the center of each passable square. Press the Menu
+key to toggle the grid on or off.
 
 ## The Screen
 
 The maze is shown in the center. Walls can show a
 decorative background picture, or a plain blue fill
-if the level does not set one. Open paths are white.
-The bottom right corner shows all available commands,
-with defined macro letters listed just above the
-legend. On editor levels, the upper-left area shows
-the echo of entered commands.
-
-Press Ctrl+Esc to exit. Shift+Esc returns to the maze
-menu.
+if the level does not set one. Open paths are white,
+with the diamond, any yellow boxes, and cyan squares
+sitting on them. The bottom-right corner shows all
+available commands, with your shortcut letters just
+above it. The level number ("Maze N") is in the
+top-right corner. On editor levels, the entered
+commands are echoed in the upper-left area.
